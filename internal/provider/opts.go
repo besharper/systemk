@@ -108,6 +108,10 @@ type Opts struct {
 
 	// Version carries the systemk version.
 	Version string
+
+	// ExtractImage indicates to extract container image onto filesystem
+	// instead of using `image` field to install package from repository
+	ExtractImage bool
 }
 
 // SetDefaultOpts sets default options for unset values of the passed in option struct.

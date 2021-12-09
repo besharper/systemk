@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/virtual-kubelet/systemk/internal/unit"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // ArchLinuxManager manages packages on Arch Linux.
@@ -26,13 +27,13 @@ func (p *ArchLinuxManager) Setup() error {
 	return nil
 }
 
-func (p *ArchLinuxManager) Install(pkg, version string) (bool, error) {
-	log.WithField("os", "archlinux").Infof("checking if %q is installed", Clean(pkg))
-	if path.IsAbs(pkg) {
+func (p *ArchLinuxManager) Install(container corev1.Container, version string) (bool, error) {
+	log.WithField("os", "archlinux").Infof("checking if %q is installed", Clean(container.Image))
+	if path.IsAbs(container.Image) {
 		return false, nil
 	}
 
-	checkCmdArgs := []string{"-Qi", pkg}
+	checkCmdArgs := []string{"-Qi", container.Image}
 	checkCmd := exec.Command(pacmanCommand, checkCmdArgs...)
 
 	err := checkCmd.Run()
@@ -43,7 +44,7 @@ func (p *ArchLinuxManager) Install(pkg, version string) (bool, error) {
 	}
 
 	// no way to specify a package version in arch
-	installCmdArgs := []string{"-S", "--noconfirm", pkg}
+	installCmdArgs := []string{"-S", "--noconfirm", container.Image}
 	installCmd := exec.Command(aptGetCommand, installCmdArgs...)
 
 	_, err = installCmd.CombinedOutput()

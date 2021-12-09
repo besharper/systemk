@@ -93,7 +93,7 @@ func (p *p) CreatePod(ctx context.Context, pod *corev1.Pod) error {
 
 		// TODO(miek) parse c.Image for tag to get version. Check ImagePullAlways to reinstall??
 		// if we're downloading the image, the image name needs cleaning
-		installed, err := p.pkgManager.Install(c.Image, "")
+		installed, err := p.pkgManager.Install(c, "")
 		if err != nil {
 			err = errors.Wrapf(err, "failed to install package %q", c.Image)
 			fnlog.Error(err)
