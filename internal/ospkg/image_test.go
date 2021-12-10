@@ -9,7 +9,8 @@ import (
 func TestImage(t *testing.T) {
 	d := new(ImageManager)
 	c := v1.Container{
-		Image: "busybox",
+		Name:  "startup",
+		Image: "docker.io/library/busybox:latest",
 	}
 	ok, err := d.Install(c, "")
 	if err != nil || !ok {
