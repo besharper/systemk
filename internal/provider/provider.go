@@ -86,7 +86,7 @@ func New(ctx context.Context, config *Opts, podWatcher kubernetes.PodResourceMan
 		}
 		// Just installed pre-requisites instead of pointing to the docs.
 		log.Infof("installing %s, to prevent installed daemons from starting", "policyrcd-script-zg2")
-		ok, err := p.pkgManager.Install(container, "")
+		ok, err := p.pkgManager.Install(container.Image, "")
 		if err != nil {
 			log.Warnf("failed to install %s, %s, continuing anyway", "policyrcd-script-zg2", err)
 		}

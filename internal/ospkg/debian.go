@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/virtual-kubelet/systemk/internal/unit"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // DebianManager manages packages on Debian.
@@ -25,30 +24,30 @@ const (
 	debianSystemdUnitfilesPathPrefix = "/lib/systemd/system/"
 )
 
-func (p *DebianManager) Install(container corev1.Container, version string) (bool, error) {
+func (p *DebianManager) Install(pkg, version string) (bool, error) {
 	fnlog := log.WithField("os", "debian")
-	fnlog.Infof("checking if %q is installed", Clean(container.Image))
-	if path.IsAbs(container.Image) {
+	fnlog.Infof("checking if %q is installed", Clean(pkg))
+	if path.IsAbs(pkg) {
 		return false, nil
 	}
-	checkCmd := exec.Command(dpkgCommand, "-s", Clean(container.Image))
+	checkCmd := exec.Command(dpkgCommand, "-s", Clean(pkg))
 	if err := checkCmd.Run(); err == nil {
 		return false, nil
 	}
 
 	installCmd := new(exec.Cmd)
 	switch {
-	case strings.HasPrefix(container.Image, "https://"):
-		pkgToInstall, err := fetch(container.Image, "")
+	case strings.HasPrefix(pkg, "https://"):
+		pkgToInstall, err := fetch(pkg, "")
 		if err != nil {
 			return false, err
 		}
 		installCmdArgs := []string{"-i", pkgToInstall}
 		installCmd = exec.Command(dpkgCommand, installCmdArgs...)
 	default:
-		pkgToInstall := container.Image
+		pkgToInstall := pkg
 		if version != "" {
-			pkgToInstall = fmt.Sprintf("%s=%s*", container.Image, version)
+			pkgToInstall = fmt.Sprintf("%s=%s*", pkg, version)
 		}
 		installCmdArgs := []string{"-qq", "--assume-yes", "--no-install-recommends", "install", pkgToInstall}
 		installCmd = exec.Command(aptGetCommand, installCmdArgs...)
