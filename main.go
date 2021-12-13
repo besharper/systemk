@@ -76,5 +76,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Info("systemk exited gracefully")
+	if !opts.PrintKubeletVersion {
+		log.Info("systemk exited gracefully")
+	}
 }
