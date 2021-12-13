@@ -112,6 +112,10 @@ type Opts struct {
 	// ExtractImage indicates to extract container image onto filesystem
 	// instead of using `image` field to install package from repository
 	ExtractImage bool
+
+	// PrintKubeletVersion indicates whether to print the Kubernetes
+	// version required by preflight checks
+	PrintKubeletVersion bool
 }
 
 // SetDefaultOpts sets default options for unset values of the passed in option struct.

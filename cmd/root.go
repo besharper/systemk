@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"path"
 
 	"github.com/pkg/errors"
@@ -55,6 +56,12 @@ func NewRootCommand(ctx context.Context, name string, opts *provider.Opts) *cobr
 func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	// Print Kubernetes compatible version
+	if opts.PrintKubeletVersion {
+		fmt.Printf("Kubernetes %s\n", opts.Version)
+		return nil
+	}
 
 	// Setup a clientset.
 	restConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
