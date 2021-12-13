@@ -51,6 +51,7 @@ func InstallFlags(flags *pflag.FlagSet, c *provider.Opts) {
 	flags.IPVar(&c.NodeExternalIP, "external-ip", net.IPv4zero, "IP address to advertise as Node ExternalIP, 0.0.0.0 means auto-detect")
 	flags.StringVar(&c.NodeExternalIface, "external-iface", "", "IP address of this named interface to advertise as Node ExternalIP, takes precedence over --external-ip")
 	flags.BoolVarP(&c.DisableTaint, "disable-taint", "", false, "disable the node taint")
+	flags.BoolVarP(&c.ExtractImage, "extract-image", "", false, "extract container image instead of downloading package")
 
 	// Since klog is the logger implementation, install its flags.
 	// But prepend "klog." to the flag name for clear separation.
