@@ -19,7 +19,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
 	"path"
+	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -27,16 +32,19 @@ import (
 	"github.com/virtual-kubelet/systemk/internal/provider"
 	"github.com/virtual-kubelet/virtual-kubelet/node"
 	"github.com/virtual-kubelet/virtual-kubelet/node/nodeutil"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/wait"
 	kubeinformers "k8s.io/client-go/informers"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+	kubeletconfig "k8s.io/kubelet/config/v1beta1"
 )
 
 // NewRootCommand creates a new top-level command.
@@ -61,6 +69,23 @@ func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 	if opts.PrintKubeletVersion {
 		fmt.Printf("Kubernetes %s\n", opts.Version)
 		return nil
+	}
+
+	if opts.ConfigPath != "" {
+		config, err := readConfig(opts.ConfigPath)
+		if err != nil {
+			return err
+		}
+		if config.HealthzPort != nil && config.HealthzBindAddress != "" {
+			mux := http.NewServeMux()
+			kubernetes.InstallHealthzHandler(mux)
+			go wait.Until(func() {
+				err := http.ListenAndServe(net.JoinHostPort(config.HealthzBindAddress, strconv.Itoa(int(*config.HealthzPort))), mux)
+				if err != nil {
+					log.WithError(err).Error(err, "Failed to start healthz server")
+				}
+			}, 5*time.Second, wait.NeverStop)
+		}
 	}
 
 	// Setup a clientset.
@@ -209,6 +234,22 @@ func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 
 	<-ctx.Done()
 	return nil
+}
+
+func readConfig(path string) (kubeletconfig.KubeletConfiguration, error) {
+	c := kubeletconfig.KubeletConfiguration{}
+
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return c, err
+	}
+
+	err = yaml.Unmarshal(buf, c)
+	if err != nil {
+		return c, fmt.Errorf("in file %q: %v", path, err)
+	}
+
+	return c, nil
 }
 
 func setNodeReady(n *corev1.Node) {

@@ -116,6 +116,9 @@ type Opts struct {
 	// PrintKubeletVersion indicates whether to print the Kubernetes
 	// version required by preflight checks
 	PrintKubeletVersion bool
+
+	// ConfigPath is the path to the kubeadm generated config file
+	ConfigPath string
 }
 
 // SetDefaultOpts sets default options for unset values of the passed in option struct.

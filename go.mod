@@ -11,9 +11,11 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/virtual-kubelet/virtual-kubelet v1.5.1-0.20210601190559-68347d4ed102
-	k8s.io/api v0.21.1
-	k8s.io/apimachinery v0.21.1
-	k8s.io/client-go v0.21.1
-	k8s.io/klog/v2 v2.8.0
+	gopkg.in/yaml.v2 v2.4.0
+	k8s.io/api v0.23.0
+	k8s.io/apimachinery v0.23.0
+	k8s.io/client-go v0.23.0
+	k8s.io/klog/v2 v2.30.0
 	k8s.io/kubectl v0.21.1
+	k8s.io/kubelet v0.23.0
 )
