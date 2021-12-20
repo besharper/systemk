@@ -53,6 +53,7 @@ func InstallFlags(flags *pflag.FlagSet, c *provider.Opts) {
 	flags.StringVar(&c.NodeExternalIface, "external-iface", "", "IP address of this named interface to advertise as Node ExternalIP, takes precedence over --external-ip")
 	flags.BoolVarP(&c.DisableTaint, "disable-taint", "", false, "disable the node taint")
 	flags.BoolVarP(&c.ExtractImage, "extract-image", "", false, "extract image instead of installing package")
+	flags.BoolVarP(&c.PrintKubeletVersion, "version", "", false, "display the kubelet version")
 
 	// Since klog is the logger implementation, install its flags.
 	// But prepend "klog." to the flag name for clear separation.
