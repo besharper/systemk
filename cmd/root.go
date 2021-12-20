@@ -26,13 +26,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/virtual-kubelet/systemk/internal/kubernetes"
 	"github.com/virtual-kubelet/systemk/internal/provider"
 	"github.com/virtual-kubelet/virtual-kubelet/node"
 	"github.com/virtual-kubelet/virtual-kubelet/node/nodeutil"
-	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -244,7 +244,7 @@ func readConfig(path string) (kubeletconfig.KubeletConfiguration, error) {
 		return c, err
 	}
 
-	err = yaml.Unmarshal(buf, c)
+	err = yaml.Unmarshal(buf, &c)
 	if err != nil {
 		return c, fmt.Errorf("in file %q: %v", path, err)
 	}
