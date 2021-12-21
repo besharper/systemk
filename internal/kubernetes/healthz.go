@@ -6,7 +6,7 @@ import (
 )
 
 func InstallHealthzHandler(mux *http.ServeMux) {
-	path := "/healhtz"
+	path := "/healthz"
 	mux.HandleFunc(path, func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "%s check passed\n", path)
 	})

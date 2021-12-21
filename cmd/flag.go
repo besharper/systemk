@@ -53,7 +53,14 @@ func InstallFlags(flags *pflag.FlagSet, c *provider.Opts) {
 	flags.StringVar(&c.NodeExternalIface, "external-iface", "", "IP address of this named interface to advertise as Node ExternalIP, takes precedence over --external-ip")
 	flags.BoolVarP(&c.DisableTaint, "disable-taint", "", false, "disable the node taint")
 	flags.BoolVarP(&c.ExtractImage, "extract-image", "", false, "extract image instead of installing package")
+
+	// Required for cluster API
 	flags.BoolVarP(&c.PrintKubeletVersion, "version", "", false, "display the kubelet version")
+	flags.BoolVarP(&c.WaitForKubeConfig, "wait-for-config", "", true, "whether we should wait for kubeconfig to exist")
+	flags.StringVar(&c.BootstrapKubeConfigPath, "bootstrap-kubeconfig", "", "path to config to use when bootstraping kubelet")
+	flags.StringVar(&c.NetworkPlugin, "network-plugin", "", "the network plugin to use i.e. cni")
+	flags.StringVar(&c.PodInfraContainerImage, "pod-infra-container-image", "", "image to use for underlying infrastructure")
+	flags.StringVar(&c.ProviderID, "provider-id", "", "passes the provider ID")
 
 	// Since klog is the logger implementation, install its flags.
 	// But prepend "klog." to the flag name for clear separation.

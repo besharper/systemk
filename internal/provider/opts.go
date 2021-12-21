@@ -119,6 +119,15 @@ type Opts struct {
 
 	// ConfigPath is the path to the kubeadm generated config file
 	ConfigPath string
+
+	// WaitForKubeConfig indicates if we should wait for kubeconfig exists before we continue
+	WaitForKubeConfig bool
+
+	// Additional flags for Cluster API
+	BootstrapKubeConfigPath string
+	NetworkPlugin           string
+	PodInfraContainerImage  string
+	ProviderID              string
 }
 
 // SetDefaultOpts sets default options for unset values of the passed in option struct.

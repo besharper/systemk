@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
 	"time"
@@ -37,7 +38,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	kubeinformers "k8s.io/client-go/informers"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -79,18 +79,38 @@ func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 		if config.HealthzPort != nil && config.HealthzBindAddress != "" {
 			mux := http.NewServeMux()
 			kubernetes.InstallHealthzHandler(mux)
-			go wait.Until(func() {
+			go func() {
 				err := http.ListenAndServe(net.JoinHostPort(config.HealthzBindAddress, strconv.Itoa(int(*config.HealthzPort))), mux)
 				if err != nil {
 					log.WithError(err).Error(err, "Failed to start healthz server")
 				}
-			}, 5*time.Second, wait.NeverStop)
+			}()
+		}
+	}
+
+	// Wait until kubeconfig is present
+	if opts.WaitForKubeConfig {
+		for !configFileExists(opts.BootstrapKubeConfigPath) {
+			time.Sleep(time.Second * 5)
+			log.Warnf("waiting for bootstrap-kubeconfig to be at %s", opts.BootstrapKubeConfigPath)
+		}
+		// for !configFileExists(opts.KubeConfigPath) {
+		// 	time.Sleep(time.Second * 5)
+		// 	log.Warnf("waiting for kubeconfig to be at %s", opts.KubeConfigPath)
+		// }
+	}
+
+	configPath := opts.KubeConfigPath
+	if !configFileExists(opts.KubeConfigPath) {
+		if configFileExists(opts.BootstrapKubeConfigPath) {
+			configPath = opts.BootstrapKubeConfigPath
+			log.Warnf("using bootstrap-kubeconfig at %s", opts.BootstrapKubeConfigPath)
 		}
 	}
 
 	// Setup a clientset.
 	restConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: opts.KubeConfigPath},
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: configPath},
 		&clientcmd.ConfigOverrides{}).ClientConfig()
 	if err != nil {
 		return err
@@ -234,6 +254,14 @@ func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 
 	<-ctx.Done()
 	return nil
+}
+
+func configFileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func readConfig(path string) (kubeletconfig.KubeletConfiguration, error) {
