@@ -38,6 +38,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	kubeinformers "k8s.io/client-go/informers"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -45,6 +46,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
 	kubeletconfig "k8s.io/kubelet/config/v1beta1"
+	"k8s.io/kubernetes/pkg/kubelet/certificate/bootstrap"
 )
 
 // NewRootCommand creates a new top-level command.
@@ -105,6 +107,10 @@ func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 		if configFileExists(opts.BootstrapKubeConfigPath) {
 			configPath = opts.BootstrapKubeConfigPath
 			log.Warnf("using bootstrap-kubeconfig at %s", opts.BootstrapKubeConfigPath)
+			err := bootstrap.LoadClientCert(ctx, opts.KubeConfigPath, opts.BootstrapKubeConfigPath, "/etc/kubernetes/pki", types.NodeName(opts.NodeName))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
