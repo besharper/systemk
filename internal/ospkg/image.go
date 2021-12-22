@@ -3,7 +3,6 @@ package ospkg
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -21,15 +20,8 @@ const (
 	imageBaseRootPath = "/tmp/fleet"
 )
 
-const baseUnit = `[Unit]
-
-[Service]
-
-[Install]
-`
-
 func (p *ImageManager) Install(pkg, version string) (bool, error) {
-	rootPath := getRootPath(pkg)
+	rootPath := GetImageRootDirectory(pkg, false)
 	if _, err := os.Stat(rootPath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			err = os.MkdirAll(rootPath, os.ModePerm)
@@ -57,13 +49,26 @@ func (p *ImageManager) Install(pkg, version string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to extract rootfs: %+v", err)
 	}
+
+	basicPath := getBasicPath(pkg)
+	_, err = os.Stat(basicPath)
+	if os.IsNotExist(err) {
+		_, err = os.Create(basicPath)
+		if err != nil {
+			return false, err
+		}
+	}
+
 	return true, nil
 }
 
 func (p *ImageManager) Unitfile(pkg string) (string, error) {
+	return getBasicPath(pkg), nil
+}
+
+func getBasicPath(pkg string) string {
 	basicPath := ""
 	serviceName := prepareServiceName(pkg)
-
 	// Determine OS
 	systemID := system.ID()
 	switch systemID {
@@ -72,43 +77,17 @@ func (p *ImageManager) Unitfile(pkg string) (string, error) {
 	case "arch":
 		basicPath = archlinuxSystemdUnitfilesPathPrefix + serviceName + unit.ServiceSuffix
 	}
-
-	// Get/Create unitfile
-	uf := &unit.File{}
-	if _, err := os.Stat(basicPath); err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			uf, err = unit.NewFile(baseUnit)
-			if err != nil {
-				return basicPath, err
-			}
-		}
-	} else {
-		buf, err := ioutil.ReadFile(basicPath)
-		if err != nil {
-			return basicPath, err
-		}
-		uf, err = unit.NewFile(string(buf))
-		if err != nil {
-			return basicPath, err
-		}
-	}
-
-	// Required fields
-	uf = uf.Overwrite("Service", "RootDirectory", fmt.Sprintf("%s/rootfs", getRootPath(pkg)))
-
-	// Write contents
-	bContents := []byte(uf.String())
-	log.Infof("writing systemd unit %q (%dB written)", basicPath, len(bContents))
-	err := ioutil.WriteFile(basicPath, bContents, os.FileMode(0644))
-	if err != nil {
-		return basicPath, err
-	}
-
-	return basicPath, nil
+	return basicPath
 }
 
-func getRootPath(pkg string) string {
-	return fmt.Sprintf("%s/%s", imageBaseRootPath, pkg)
+// GetImageRootDirectory returns the root directory for the service to use.
+// The fullPath flag is whether to include the suffix of the rootfs or not
+func GetImageRootDirectory(pkg string, fullPath bool) string {
+	base := fmt.Sprintf("%s/%s", imageBaseRootPath, prepareServiceName(pkg))
+	if fullPath {
+		base += "/rootfs"
+	}
+	return base
 }
 
 func prepareServiceName(pkg string) string {

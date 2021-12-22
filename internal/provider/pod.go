@@ -139,6 +139,10 @@ func (p *p) CreatePod(ctx context.Context, pod *corev1.Pod) error {
 			uf = uf.Overwrite("Service", "WorkingDirectory", c.WorkingDir)
 		}
 
+		if p.config.ExtractImage {
+			uf = uf.Overwrite("Service", "RootDirectory", ospkg.GetImageRootDirectory(c.Image, true))
+		}
+
 		uf = uf.Overwrite("Service", "ProtectSystem", "true")
 		uf = uf.Overwrite("Service", "ProtectHome", "tmpfs")
 		uf = uf.Overwrite("Service", "PrivateMounts", "true")
