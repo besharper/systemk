@@ -25,7 +25,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
@@ -90,33 +89,21 @@ func runRootCommand(ctx context.Context, opts *provider.Opts) error {
 		}
 	}
 
-	// Wait until kubeconfig is present
-	if opts.WaitForKubeConfig {
-		for !configFileExists(opts.BootstrapKubeConfigPath) {
-			time.Sleep(time.Second * 5)
-			log.Warnf("waiting for bootstrap-kubeconfig to be at %s", opts.BootstrapKubeConfigPath)
-		}
-		// for !configFileExists(opts.KubeConfigPath) {
-		// 	time.Sleep(time.Second * 5)
-		// 	log.Warnf("waiting for kubeconfig to be at %s", opts.KubeConfigPath)
-		// }
-	}
-
-	configPath := opts.KubeConfigPath
+	// bootrstrap node if required
 	if !configFileExists(opts.KubeConfigPath) {
 		if configFileExists(opts.BootstrapKubeConfigPath) {
-			configPath = opts.BootstrapKubeConfigPath
 			log.Warnf("using bootstrap-kubeconfig at %s", opts.BootstrapKubeConfigPath)
 			err := bootstrap.LoadClientCert(ctx, opts.KubeConfigPath, opts.BootstrapKubeConfigPath, "/etc/kubernetes/pki", types.NodeName(opts.NodeName))
 			if err != nil {
 				return err
 			}
+			log.Info("kubeconfig generated at %s", opts.KubeConfigPath)
 		}
 	}
 
 	// Setup a clientset.
 	restConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: configPath},
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: opts.KubeConfigPath},
 		&clientcmd.ConfigOverrides{}).ClientConfig()
 	if err != nil {
 		return err
