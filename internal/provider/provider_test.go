@@ -52,6 +52,13 @@ func TestCreatePod(t *testing.T) {
 				{
 					Name:  "nginx",
 					Image: "nginx",
+					Command: []string{
+						"nginx",
+					},
+					Args: []string{
+						"-g",
+						"daemon off;",
+					},
 				},
 			},
 		},
