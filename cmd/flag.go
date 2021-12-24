@@ -56,7 +56,6 @@ func InstallFlags(flags *pflag.FlagSet, c *provider.Opts) {
 
 	// Required for cluster API
 	flags.BoolVarP(&c.PrintKubeletVersion, "version", "", false, "display the kubelet version")
-	flags.BoolVarP(&c.WaitForKubeConfig, "wait-for-config", "", true, "whether we should wait for kubeconfig to exist")
 	flags.StringVar(&c.BootstrapKubeConfigPath, "bootstrap-kubeconfig", "", "path to config to use when bootstraping kubelet")
 	flags.StringVar(&c.NetworkPlugin, "network-plugin", "", "the network plugin to use i.e. cni")
 	flags.StringVar(&c.PodInfraContainerImage, "pod-infra-container-image", "", "image to use for underlying infrastructure")
